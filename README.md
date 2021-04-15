@@ -2,7 +2,7 @@
 
 Minimalist wine game launcher written purely in bash
 
-### Available commands
+## Available commands
 
 | Command                 | Description                                       |
 | ----------------------- | ------------------------------------------------- |
@@ -15,7 +15,7 @@ Minimalist wine game launcher written purely in bash
 | --winecfg   [game]      | Open winecfg on prefix                            |
 
 
-### Config file
+## Config file
 
 The config file is located at `$XDG_CONFIG_HOME/minlau/config.ini` or `$HOME/.config/minlau/config.ini` if `$XDG_CONFIG_HOME` is not set. It will accept any varible you set, so things like `DXVK_HUD`can also be used.
 
@@ -52,4 +52,26 @@ DXVK=1
 LAUNCH="$XDG_DATA_HOME/Games/foo/foo.exe"
 WINE="$XDG_DATA_HOME/lutris/runners/wine/lutris-6.4-x86_64/bin/wine64"
 WINEPREFIX="$XDG_DATA_HOME/Games/wineprefixes/foo"
+```
+
+## Installation
+### Arch/Manjaro
+A package is available in the AUR [minlau-git](https://aur.archlinux.org/packages/minlau-git/). If you use an AUR helper:
+```sh
+$ paru -S minlau-git
+```
+
+### Any distro
+Clone the repo and modify the contents of setup.sh to fit your needs:
+```sh
+$ git clone https://github.com/theRealCarneiro/minlau.git
+$ cd minlau
+```
+Install
+```sh
+$ sudo ./setup.sh install
+```
+ Uninstall
+```sh
+$ sudo ./setup.sh uninstall
 ```
