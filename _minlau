@@ -1,0 +1,5 @@
+#compdef minlau
+
+_arguments -C \
+  "1: :(--winecfg --instal-dxvk --uninstall-dxvk --launch --list-games --create-prefix --help)" \
+  "2: :($(minlau --list-games))"
