@@ -1,0 +1,153 @@
+#!/bin/bash
+
+[[ -z $XDG_CONFIG_HOME ]] && XDG_CONFIG_HOME=$HOME/.config
+[[ -z $XDG_CACHE_HOME ]] && XDG_CONFIG_HOME=$HOME/.cache
+[[ -z $XDG_DATA_HOME ]] && XDG_DATA_HOME=$HOME/.local/share
+
+config_path=$XDG_CONFIG_HOME/minlau/config.ini
+
+
+help_message(){
+	echo -en "No arguments supplied\n" \
+	"\t--help \t\t\tDisplay this message\n" \
+	"\t--list-games \t\tList games in config.ini\n" \
+	"\t--create-prefix <GAME> \tCreate a prefix if there isn't already one\n" \
+	"\t--launch <GAME> \tLaunch game\n" \
+	"\t--install-dxvk <GAME> \tInstall dxvk on prefix\n" \
+	"\t--uninstall-dxvk <GAME> Uninstall dxvk on prefix\n" \
+	"\t--winecfg <GAME> \tOpen winecfg on prefix\n" 
+}
+
+
+get_config(){
+	config="$(awk "/\[$1\]/ {p=1;next}p" $config_path | sed 's/;.*//g')"
+	[[ "$config" == "" ]] && exit && help_message
+	next_block=$(grep -m1 "\[" <<< "$config")
+
+	if [[ "$next_block" == [* ]]; then
+		next_block=$(echo "$next_block" | sed 's/\[/\\\[/' | sed 's/\]/\\\]/')
+		var="$(echo "$config" | awk "!p;/$next_block/{p=1}" |\
+			sed "s/$next_block.*//" | sed '/^$/d' | sed 's/^/export /')"
+	else
+		var="$(echo "$config" | sed 's/^/export /')"
+	fi
+	eval "$var"
+}
+
+
+# create native dll override (stole from dxvk installation)
+overrideDll() {
+	$WINE reg add 'HKEY_CURRENT_USER\Software\Wine\DllOverrides' /v $1 /d native /f >/dev/null 2>&1
+	if [ $? -ne 0 ]; then
+		echo -e "Failed to add override for $1"
+		exit 1
+	fi
+}
+
+
+# remove dll override (stole from dxvk installation)
+restoreDll() {
+  $WINE reg delete 'HKEY_CURRENT_USER\Software\Wine\DllOverrides' /v $1 /f > /dev/null 2>&1
+  if [ $? -ne 0 ]; then
+    echo "Failed to remove override for $1"
+  fi
+}
+
+
+install_dxvk(){
+	if [[ -L "$system_dll_path/$1" ]]; then
+		if [[ $(readlink -f "$system_dll_path/$1" | sed 's/\/x.*//') = $DXVK_VER ]];then
+			echo "Updating $1 to $(sed 's/.*dxvk\///' <<< $DXVK_PATH)"
+			ln -sfn "$DXVK_PATH/$(sed 's/win/x/' <<< $WINEARCH)/$1" $system_dll_path
+			overrideDll $(sed 's/.dll//' <<< $1)
+		else
+			echo "$1 already up to date"
+		fi
+
+	else
+		echo "Installing $1 $(sed 's/.*dxvk\///' <<< $DXVK_PATH)"
+		[[ -f "$system_dll_path/$1" ]] && \
+		mv -f "$system_dll_path/$1" "$system_dll_path/$1.orig"
+		ln -sfn "$DXVK_PATH/$(sed 's/win/x/' <<< $WINEARCH)/$1" $system_dll_path
+		overrideDll $(sed 's/.dll//' <<< $1)
+	fi
+}
+
+
+uninstall_dxvk(){
+	if [[ -L "$system_dll_path/$1" ]]; then
+		echo "Restoring $1"
+		restoreDll $(sed 's/.dll//' <<< $1)
+		rm "$system_dll_path/$1"
+		mv -f "$system_dll_path/$1.orig" "$system_dll_path/$1"
+	fi
+}
+
+
+if [[ $# = 0 || $1 = '--help' ]]; then
+	help_message
+	exit
+fi
+
+if [[ "$1" == '--list-games' ]]; then
+	echo $(grep '\[' $config_path | sed 's/\[//g' | sed 's/\]//g' | tail -n +2)
+	exit
+fi
+
+get_config 'global'
+get_config $2
+
+[[ -z $WINEARCH ]] && export WINEARCH=win64
+
+case $1 in
+	"--launch")
+		launch=1
+		;;
+	"--install-dxvk")
+		AUTO_DXVK=1
+		DXVK=1
+		;;
+	"--uninstall-dxvk")
+		AUTO_DXVK=1
+		DXVK=0
+		;;
+	"--winecfg") # open winecfg and exit
+		$(sed 's/wine64/wine/' <<< $WINE'cfg')
+		exit
+		;;
+	"--create-prefix")
+		exit
+		;;
+	*)
+		help_message
+		exit
+		;;
+esac
+
+# create prefix when there's none
+if [[ $WINEPREFIX != '' && ! -d $WINEPREFIX ]]; then
+	 mkdir -p "$WINEPREFIX" 
+	 $WINE wineboot
+fi
+
+# (un)install dxvk
+if [[ $AUTO_DXVK = 1 ]]; then
+	[[ $DXVK = 1 ]] && action="install_dxvk" || action="uninstall_dxvk" 
+	system_dll_path="$WINEPREFIX/drive_c/windows/system32"
+	for i in $(ls "$DXVK_PATH/$(sed 's/win/x/' <<< $WINEARCH)"); do
+		$action $i
+	done
+fi
+
+if [[ $launch = 1 ]]; then
+	export DXVK_LOG_PATH=$WINEPREFIX
+	cd "$(dirname "$LAUNCH")"
+	if [[ $GAMEMODE = 1 ]]; then
+		gamemoderun "$WINE" "$LAUNCH" "$ARGS"
+	else
+		"$WINE" "$LAUNCH" "$ARGS"
+	fi
+	#[[ $KILL != '' ]] && killall $KILL
+fi
+
+
