@@ -1,0 +1,59 @@
+.TH man 1 "April 15 2021" "1.0" "minlau manpage"
+.SH NAME
+minlau \- Create and manage wineprefixes to launch games 
+
+.SH SYNOPSIS
+\ minlau [--list-games] [--help] [--create-prefix <GAME>] [--launch <GAME>] 
+\[--install-dxvk <GAME>] [--uninstall-dxvk <GAME>] [--winecfg <GAME>]
+
+.SH DESCRIPTION
+Create and manage wineprefixes 
+
+.SH OPTIONS
+
+--list-games				List games in the config
+
+--help					Display help message
+
+--create-prefix	[GAME]	Create a prefix if there isn't already one
+
+--launch			[GAME]	Launch game        
+
+--install-dxvk		[GAME]    Install dxvk on prefix
+
+--uninstall-dxvk	[GAME]	Uninstall dxvk on prefix
+
+--winecfg			[GAME]	Open winecfg on prefix
+
+.SH CONFIG
+The config file is located at "$XDG_CONFIG_HOME/minlau/config.ini" or "$HOME/.config/minlau/config.ini" if "$XDG_CONFIG_HOME" is not set. It will accept any varible you set, so things like "DXVK_HUD" can also be used. A sample config is available at https://github.com/theRealCarneiro/minlau
+
+[global]         Global settings, will be overwriten by the game var
+
+[GAME]           Game specific settings, overwrites global settings
+
+LAUNCH           Path to game executable
+
+WINE             Path to wine binary
+
+WINEPREFIX       Path to wine prefix
+
+WINEARCH         Wine architecture [win32/win64], defaults to win64
+
+WINEESYNC        Whether or not to use esync [0/1]
+
+WINEFSYNC        Whether or not to use fsync [0/1]
+
+GAMEMODE         Whether or not to use feral gamemode [0/1]
+
+DXVK_PATH        Path to dxvk dll to install in prefix
+
+AUTO_DXVK        Whether or not to auto (un)install dxvk on prefix [0/1]
+
+DXVK             When AUTO_DXVK=1 it will install or uninstall dxvk [0/1]
+
+.SH BUGS
+No known bugs.
+
+.SH AUTHOR
+Gabriel Carneiro (gabriel.chaves.carneiro@gmail.com)
