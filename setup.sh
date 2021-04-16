@@ -13,7 +13,7 @@
 	ZSH_COMPLETION_DIR=$DESTDIR$PREFIX/share/zsh/site-functions
 
 [ -z $MAN_DIR ] && \
-	MAN_DIR=$DESTDIR$PREFIX/man/man1
+	MAN_DIR=$DESTDIR$PREFIX/share/man/man1
 
 if [ "$1" = "install" ]; then
 	install -Dm755 src/minlau "$BIN_DIR/minlau"
