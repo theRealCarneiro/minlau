@@ -5,10 +5,14 @@
 [[ -z $XDG_DATA_HOME ]] && XDG_DATA_HOME=$HOME/.local/share
 
 config_path=$XDG_CONFIG_HOME/minlau/config.ini
+if [[ ! -f $config_path ]]; then
+	mkdir -P $(sed 's/\/config.ini//' <<< "$config_path") 
+	touch $config_path
+fi
 
 
 help_message(){
-	echo -en "No arguments supplied\n" \
+	echo -en "$1\n" \
 	"\t--help \t\t\tDisplay this message\n" \
 	"\t--list-games \t\tList games in config.ini\n" \
 	"\t--create-prefix <GAME> \tCreate a prefix if there isn't already one\n" \
@@ -21,9 +25,12 @@ help_message(){
 
 get_config(){
 	config="$(awk "/\[$1\]/ {p=1;next}p" $config_path | sed 's/;.*//g')"
-	[[ "$config" == "" ]] && exit && help_message
-	next_block=$(grep -m1 "\[" <<< "$config")
+	if [[ "$config" == '' ]]; then 
+		help_message "Game not found or config not set up properly" >&2
+		exit
+	fi
 
+	next_block=$(grep -m1 "\[" <<< "$config")
 	if [[ "$next_block" == [* ]]; then
 		next_block=$(echo "$next_block" | sed 's/\[/\\\[/' | sed 's/\]/\\\]/')
 		var="$(echo "$config" | awk "!p;/$next_block/{p=1}" |\
@@ -39,7 +46,7 @@ get_config(){
 overrideDll() {
 	$WINE reg add 'HKEY_CURRENT_USER\Software\Wine\DllOverrides' /v $1 /d native /f >/dev/null 2>&1
 	if [ $? -ne 0 ]; then
-		echo -e "Failed to add override for $1"
+		echo "Failed to add override for $1" >&2
 		exit 1
 	fi
 }
@@ -49,7 +56,7 @@ overrideDll() {
 restoreDll() {
   $WINE reg delete 'HKEY_CURRENT_USER\Software\Wine\DllOverrides' /v $1 /f > /dev/null 2>&1
   if [ $? -ne 0 ]; then
-    echo "Failed to remove override for $1"
+    echo "Failed to remove override for $1" >&2
   fi
 }
 
@@ -85,12 +92,17 @@ uninstall_dxvk(){
 
 
 if [[ $# = 0 || $1 = '--help' ]]; then
-	help_message
+	help_message "Available commands"
 	exit
 fi
 
 if [[ "$1" == '--list-games' ]]; then
 	echo $(grep '\[' $config_path | sed 's/\[//g' | sed 's/\]//g' | tail -n +2)
+	exit
+fi
+
+if [[ -z $2 ]]; then
+	echo "No game name provided" >&2 
 	exit
 fi
 
@@ -112,22 +124,24 @@ case $1 in
 		DXVK=0
 		;;
 	"--winecfg") # open winecfg and exit
-		$(sed 's/wine64/wine/' <<< $WINE'cfg')
+		WINECFG="$(sed 's/wine64/wine/' <<< $WINE'cfg')"
+		[[ -f $WINECFG ]] && $WINECFG || echo 'winecfg not found' >&2
 		exit
 		;;
 	"--create-prefix")
 		exit
 		;;
 	*)
-		help_message
+		help_message "Not a valid command, here are the right ones:" >&2
 		exit
 		;;
 esac
 
 # create prefix when there's none
 if [[ $WINEPREFIX != '' && ! -d $WINEPREFIX ]]; then
-	 mkdir -p "$WINEPREFIX" 
-	 $WINE wineboot
+	echo "Prefix not found, creating a new one"
+	mkdir -p "$WINEPREFIX" 
+	$WINE wineboot
 fi
 
 # (un)install dxvk
@@ -140,8 +154,9 @@ if [[ $AUTO_DXVK = 1 ]]; then
 fi
 
 if [[ $launch = 1 ]]; then
-	export DXVK_LOG_PATH=$WINEPREFIX
-	cd "$(dirname "$LAUNCH")"
+	[[ -z $DXVK_LOG_PATH ]] && export DXVK_LOG_PATH=$WINEPREFIX
+	[[ -z $WORKING_DIR ]] && WORKING_DIR="$(dirname "$LAUNCH")"
+	cd $WORKING_DIR
 	if [[ $GAMEMODE = 1 ]]; then
 		gamemoderun "$WINE" "$LAUNCH" "$ARGS"
 	else
