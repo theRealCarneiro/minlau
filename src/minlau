@@ -129,7 +129,6 @@ case $1 in
 		exit
 		;;
 	"--create-prefix")
-		exit
 		;;
 	*)
 		help_message "Not a valid command, here are the right ones:" >&2
