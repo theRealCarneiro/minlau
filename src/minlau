@@ -90,6 +90,16 @@ uninstall_dxvk(){
 	fi
 }
 
+sandbox(){
+	readarray -t dirs <<< "$(ls $WINEPREFIX/drive_c/users/$USER)"
+	for i in "${dirs[@]}"; do
+		if [[ -L "$WINEPREFIX/drive_c/users/$USER/$i" ]]; then
+			unlink "$WINEPREFIX/drive_c/users/$USER/$i"
+			mkdir "$WINEPREFIX/drive_c/users/$USER/$i"
+		fi
+	done
+}
+
 
 if [[ $# = 0 || $1 = '--help' ]]; then
 	help_message "Available commands"
@@ -108,6 +118,7 @@ fi
 
 get_config 'global'
 get_config $2
+
 
 [[ -z $WINEARCH ]] && export WINEARCH=win64
 
@@ -142,6 +153,8 @@ if [[ $WINEPREFIX != '' && ! -d $WINEPREFIX ]]; then
 	mkdir -p "$WINEPREFIX" 
 	$WINE wineboot
 fi
+
+[[ $SANDBOX = 1 ]] && sandbox
 
 # (un)install dxvk
 if [[ $AUTO_DXVK = 1 ]]; then
