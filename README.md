@@ -1,6 +1,15 @@
 # Minlau
-
 Minimalist wine game launcher written purely in bash
+
+
+## Features
+ - Create wine prefixes
+ - Install dxvk
+ - Uninstall dxvk
+ - Launch games
+ - Use feral gamemode
+ - Configure everything with a config file
+
 
 ## Available commands
 
@@ -17,7 +26,7 @@ Minimalist wine game launcher written purely in bash
 
 ## Config file
 
-The config file is located at `$XDG_CONFIG_HOME/minlau/config.ini` or `$HOME/.config/minlau/config.ini` if `$XDG_CONFIG_HOME` is not set. It will accept any varible you set, so things like `DXVK_HUD`can also be used.
+The config file is located at `$XDG_CONFIG_HOME/minlau/config.ini` or `$HOME/.config/minlau/config.ini` if `$XDG_CONFIG_HOME` is not set. It will accept any varible you set, so things like `DXVK_HUD` can also be used.
 
 | Variable                | Description                                               |
 | ----------------------- | --------------------------------------------------------  |
@@ -33,6 +42,8 @@ The config file is located at `$XDG_CONFIG_HOME/minlau/config.ini` or `$HOME/.co
 | DXVK_PATH               | Path to dxvk dll to install in prefix                     |
 | AUTO_DXVK               | Whether or not to auto (un)install dxvk on prefix [0/1]   |
 | DXVK                    | When AUTO_DXVK=1 it will install or uninstall dxvk [0/1]  |
+| ARGS                    | Argument to go after command                              |
+| SANDBOX                 | Disable wine desktop integration [0/1]                    |
 
 Example `config.ini`:
 
@@ -52,6 +63,7 @@ DXVK=1
 LAUNCH="$XDG_DATA_HOME/Games/foo/foo.exe"
 WINE="$XDG_DATA_HOME/lutris/runners/wine/lutris-6.4-x86_64/bin/wine64"
 WINEPREFIX="$XDG_DATA_HOME/Games/wineprefixes/foo"
+SANDBOX=1
 ```
 
 ## Installation
