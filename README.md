@@ -1,5 +1,5 @@
 # Minlau
-Minimalist wine game launcher written purely in bash
+Minimalist wine game launcher written purely in bash.
 
 
 ## Features
@@ -9,19 +9,22 @@ Minimalist wine game launcher written purely in bash
  - Launch games
  - Use feral gamemode
  - Configure everything with a config file
+ - Full featured zsh completion script
 
 
 ## Available commands
 
-| Command                 | Description                                       |
-| ----------------------- | ------------------------------------------------- |
-| --list-games            | List games in config.ini                          |
-| --help                  | Display help message                              |
-| --create-prefix [game]  | Create a prefix if there isn't already one        |
-| --launch [game]         | Launch game                                       |
-| --install-dxvk [game]   | Install dxvk on prefix                            |
-| --uninstall-dxvk [game] | Uninstall dxvk on prefix                          |
-| --winecfg   [game]      | Open winecfg on prefix                            |
+| Command                   | Description                                       |
+| -----------------------   | ------------------------------------------------- |
+| --list-games              | List games in config.ini                          |
+| --help                    | Display help message                              |
+| --create-prefix [game]    | Create a prefix if there isn't already one        |
+| --launch [game]           | Launch game                                       |
+| --install-dxvk [game]     | Install dxvk on prefix                            |
+| --uninstall-dxvk [game]   | Uninstall dxvk on prefix                          |
+| --winecfg   [game]        | Open winecfg on prefix                            |
+| --download-wine [version] | Download wine build and install it                |
+| --download-dxvk [version] | Download dxvk build and install it                |
 
 
 ## Config file
@@ -44,6 +47,10 @@ The config file is located at `$XDG_CONFIG_HOME/minlau/config.ini` or `$HOME/.co
 | DXVK                    | When AUTO_DXVK=1 it will install or uninstall dxvk [0/1]  |
 | ARGS                    | Argument to go after command                              |
 | SANDBOX                 | Disable wine desktop integration [0/1]                    |
+| WINE_INSTALL            | Path to install wine builds                               |
+| DXVK_INSTALL            | Path to install dxvk builds                               |
+| MINLAU_CACHE            | Path to store temporary files                             |
+| WORKING_DIR             | Directory to cd when opening the game                     |
 
 Example `config.ini`:
 
@@ -58,12 +65,12 @@ GAMEMODE=1
 DXVK_PATH="$XDG_DATA_HOME/lutris/runtime/dxvk/v1.8.1L"
 AUTO_DXVK=1
 DXVK=1
+SANDBOX=1
 
 [foo]
 LAUNCH="$XDG_DATA_HOME/Games/foo/foo.exe"
 WINE="$XDG_DATA_HOME/lutris/runners/wine/lutris-6.4-x86_64/bin/wine64"
 WINEPREFIX="$XDG_DATA_HOME/Games/wineprefixes/foo"
-SANDBOX=1
 ```
 
 ## Installation

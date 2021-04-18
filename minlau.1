@@ -3,8 +3,7 @@
 minlau \- A minimalist game launcher that creates and manages wineprefixes 
 
 .SH SYNOPSIS
-\ minlau [--list-games] [--help] [--create-prefix <GAME>] [--launch <GAME>] 
-\[--install-dxvk <GAME>] [--uninstall-dxvk <GAME>] [--winecfg <GAME>]
+\ minlau [OPTION] ... [GAME] 
 
 .SH DESCRIPTION
 A minimalist game launcher that creates and manages wineprefixes
@@ -37,8 +36,29 @@ Uninstall dxvk on prefix
 --winecfg <GAME>
 Open winecfg on prefix
 
+
+.TP
+--download-wine <VERSION>
+Download and install wine build in directory defined in config file
+
+.TP
+--download-dxvk <VERSION>
+Download and install dxvk build in directory defined in config file
+
+.TP
+--list Argument for [--download-wine] and [--download-dxvk]
+Lists all available builds
+
+.TP
+--update-database Argument for [--download-wine] and [--download-dxvk]
+Update version name database
+
 .SH CONFIG
-The config file is located at "$XDG_CONFIG_HOME/minlau/config.ini" or "$HOME/.config/minlau/config.ini" if "$XDG_CONFIG_HOME" is not set. It will accept any varible you set, so things like "DXVK_HUD" can also be used. A sample config is available at https://github.com/theRealCarneiro/minlau
+.SS Config path
+The config file is located at "$XDG_CONFIG_HOME/minlau/config.ini" or "$HOME/.config/minlau/config.ini" if "$XDG_CONFIG_HOME" is not set.  A sample config is available at https://github.com/theRealCarneiro/minlau.
+
+.SS How to set up config.ini
+\The confifuration is done by puting the game name in [ ] and it's variables below. It will accept any varible you set, so things like "DXVK_HUD" can also be used.
 
 [global]		Global settings, will be overwriten by the game var
 
@@ -67,6 +87,14 @@ DXVK			When AUTO_DXVK=1 it will install or uninstall dxvk [0/1]
 ARGS			Arguments to put after the command
 
 SANDBOX		Disables wine desktop integration [0/1]	
+
+WINE_INSTALL	Path to install wine builds
+
+DXVK_INSTALL	Path to install dxvk builds
+
+MINLAU_CACHE	Where to store temporary files
+
+WORKING_DIR	Where to cd to when launching game
 
 .SH AUTHOR
 Gabriel Carneiro (gabriel.chaves.carneiro@gmail.com)

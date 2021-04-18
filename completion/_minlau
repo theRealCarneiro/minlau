@@ -1,5 +1,51 @@
 #compdef minlau
 
-_arguments -C \
-  "1: :(--winecfg --install-dxvk --uninstall-dxvk --launch --list-games --create-prefix --help)" \
-  "2: :($(minlau --list-games))"
+
+_list_games(){
+  _alternative "($(minlau --list-games))"
+}
+
+_list_wine_builds(){
+  _alternative "(--list --update-database $(minlau --download-wine --list))"
+}
+
+_list_dxvk_builds(){
+  _alternative "(--list --update-database $(minlau --download-dxvk --list))"
+}
+
+_minlau(){
+  local line
+  _arguments -C \
+    ": :(--winecfg --install-dxvk --uninstall-dxvk --launch --list-games --create-prefix --help --download-wine --download-dxvk)" \
+    "*::arg:->args"
+
+  case $line[1] in
+    "--winecfg") 
+	    _list_games
+	    ;;
+    "--install-dxvk") 
+	    _list_games
+	    ;;
+    "--uninstall-dxvk") 
+	    _list_games
+	    ;;
+    "--launch") 
+	    _list_games
+	    ;;
+    "--create-prefix") 
+	    _list_games
+	    ;;
+    "--download-wine") 
+	    _list_wine_builds
+	    ;;
+    "--download-dxvk") 
+	    _list_dxvk_builds
+	    ;;
+    "--list-games")
+	    ;;
+    "--help")
+	    ;;
+  esac
+}
+
+_minlau

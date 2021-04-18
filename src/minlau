@@ -4,6 +4,8 @@
 [[ -z $XDG_CACHE_HOME ]] && XDG_CACHE_HOME=$HOME/.cache
 [[ -z $XDG_DATA_HOME ]] && XDG_DATA_HOME=$HOME/.local/share
 
+[[ -z $MINLAU_CACHE ]] && MINLAU_CACHE=$XDG_CACHE_HOME/minlau && mkdir -p $MINLAU_CACHE
+
 config_path=$XDG_CONFIG_HOME/minlau/config.ini
 if [[ ! -f $config_path ]]; then
 	mkdir -P $(sed 's/\/config.ini//' <<< "$config_path") 
@@ -13,13 +15,15 @@ fi
 
 help_message(){
 	echo -en "$1\n" \
-	"\t--help \t\t\tDisplay this message\n" \
-	"\t--list-games \t\tList games in config.ini\n" \
-	"\t--create-prefix <GAME> \tCreate a prefix if there isn't already one\n" \
-	"\t--launch <GAME> \tLaunch game\n" \
-	"\t--install-dxvk <GAME> \tInstall dxvk on prefix\n" \
-	"\t--uninstall-dxvk <GAME> Uninstall dxvk on prefix\n" \
-	"\t--winecfg <GAME> \tOpen winecfg on prefix\n" 
+	"\t--help \t\t\t\tDisplay this message\n" \
+	"\t--list-games \t\t\tList games in config.ini\n" \
+	"\t--create-prefix <GAME> \t\tCreate a prefix if there isn't already one\n" \
+	"\t--launch <GAME> \t\tLaunch game\n" \
+	"\t--install-dxvk <GAME> \t\tInstall dxvk on prefix\n" \
+	"\t--uninstall-dxvk <GAME> \tUninstall dxvk on prefix\n" \
+	"\t--winecfg <GAME> \t\tOpen winecfg on prefix\n"\
+	"\t--download_wine <VERSION> \tDownload and install wine\n" \
+	"\t--download_dxvk <VERSION> \tDownload and install dxvk\n" 
 }
 
 
@@ -101,13 +105,106 @@ sandbox(){
 }
 
 
+download_dxvk(){
+	url="https://api.github.com/repos/lutris/dxvk/releases"
+	jason=$(curl --silent "$url")
+	ver=$(echo "$jason" | grep "tag_name" | sed 's/.* //g; s/"//g; s/,//g')
+	echo $ver | sed 's/ /\n/g' > $MINLAU_CACHE/dxvk.ver
+	[[ "$1" = "--update-database" ]] && return
+
+	for i in $(cat $MINLAU_CACHE/dxvk.ver);do
+		[[ "$1" = "$i" ]] && exist=1 && break
+	done
+	[[ -z $exist ]] && echo "Build not found" >&2 && exit
+
+	ver="$(sed 's/v//' <<< "$1")"
+
+	link=$(echo "$jason"|grep "download_ur.*$ver\.t"|sed 's/.* //g; s/"//g; s/,//g')
+	[[ "$link" == '' ]] && echo "Build not found" >&2 && exit
+
+	[[ -z $DXVK_INSTALL ]] && DXVK_INSTALL=$XDG_DATA_HOME/minlau/dxvk
+	mkdir -p $DXVK_INSTALL
+
+	[[ -f $MINLAU_CACHE/${link##*/} ]] && rm $MINLAU_CACHE/${link##*/}
+	wget -P $MINLAU_CACHE $link
+	tar -xf $MINLAU_CACHE/${link##*/} -C $DXVK_INSTALL
+	rm $MINLAU_CACHE/${link##*/}
+}
+
+
+download_wine(){
+	lutris_url="https://lutris.net/api/runners?format=json&search=wine"
+	tkg_url="https://api.github.com/repos/Frogging-Family/wine-tkg-git/releases"
+	lutris_wine="$(curl --silent "$lutris_url")"
+	tkg_wine="$(curl --silent "$tkg_url")"
+
+	# get lutris wine build name
+	lutris_ver=$(echo "$lutris_wine" | sed 's/{/\n/g' | \
+		sed 's/,.*/ /g; s/.*://g; s/"//g'|	tail -n +4)
+
+	# get wine-tkg build name
+	tgk_ver=$(echo "$tkg_wine" | grep "name.*wine.*pkg" | \
+		sed 's/.*wine-//; s/"//g; s/\.r.*//;')
+
+	echo "$lutris_ver" | tac > $MINLAU_CACHE/wine.ver
+	echo "$tgk_ver" >> $MINLAU_CACHE/wine.ver
+
+	[[ "$1" = "--update-database" ]] && return
+
+	# check if build exists
+	for i in $(cat $MINLAU_CACHE/wine.ver);do
+		[[ "$1" = "$i" ]] && exist=1 && break
+	done
+	[[ -z $exist ]] && echo "Build not found" >&2 && exit
+
+	ver=$1
+
+	link_tkg=$(echo "$tkg_wine" | grep "download_url.*$ver\." |\
+		sed 's/.* //; s/"//g')
+
+	[[ -z $link_tkg ]] && \
+	link_lutris=$(echo "$lutris_wine" | sed 's/{/\n/g' |\
+		grep $ver | sed 's/.*url":"//g; s/".*//g')
+
+	if [[ "$link_tkg" != "" ]]; then
+		link=$link_tkg 
+	elif [[ "$link_lutris" != "" ]]; then
+		link=$link_lutris
+	else
+		echo "Build not found" >&2
+	fi
+
+	[[ -z $WINE_INSTALL ]] && WINE_INSTALL=$XDG_DATA_HOME/minlau/wine
+	mkdir -p $WINE_INSTALL
+
+	[[ -f $MINLAU_CACHE/${link##*/} ]] && rm $MINLAU_CACHE/${link##*/}
+	wget -P $MINLAU_CACHE $link
+	tar -xf $MINLAU_CACHE/${link##*/} -C $WINE_INSTALL
+	rm $MINLAU_CACHE/${link##*/}
+}
+
+
+
 if [[ $# = 0 || $1 = '--help' ]]; then
 	help_message "Available commands"
 	exit
 fi
 
 if [[ "$1" == '--list-games' ]]; then
-	echo $(grep '\[' $config_path | sed 's/\[//g' | sed 's/\]//g' | tail -n +2)
+	echo $(grep '\[' $config_path | sed 's/\[//g; s/\]//g' | tail -n +2)
+	exit
+fi
+
+if [[ $1 = --download-* ]]; then
+	[[ -z $2 ]] && echo "No ${1##*-} build provided" >&2 && exit
+
+	if [[ "$2" = "--list" ]]; then
+		[[ ! -f $MINLAU_CACHE/${1##*-}.ver ]] && download_${1##*-} --update-database 
+		cat $MINLAU_CACHE/${1##*-}.ver 2> /dev/null | column
+		exit
+	fi
+	download_${1##*-} $2 
+	[[ "$2" = "--update-database" ]] && exit
 	exit
 fi
 
