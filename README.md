@@ -4,12 +4,13 @@ Minimalist wine game launcher written purely in bash.
 
 ## Features
  - Create wine prefixes
- - Install dxvk
- - Uninstall dxvk
+ - Download and install wine builds
+ - Download and install dxvk builds
+ - Install and uninstall dxvk on wine prefix
  - Launch games
  - Use feral gamemode
  - Configure everything with a config file
- - Full featured zsh completion script
+ - Fully featured zsh completion script
 
 
 ## Available commands
