@@ -266,12 +266,19 @@ if [[ $launch = 1 ]]; then
 	[[ -z $DXVK_LOG_PATH ]] && export DXVK_LOG_PATH=$WINEPREFIX
 	[[ -z $WORKING_DIR ]] && WORKING_DIR="$(dirname "$LAUNCH")"
 	cd $WORKING_DIR
+
+	if [[ $DISABLE_SCREEN_SAVER = 1 ]]; then
+		xset_time=$(xset q | awk '/timeout/ {print $2}')
+		xset s off
+	fi
+
 	if [[ $GAMEMODE = 1 ]]; then
 		gamemoderun "$WINE" "$LAUNCH" "$ARGS"
 	else
 		"$WINE" "$LAUNCH" "$ARGS"
 	fi
 	#[[ $KILL != '' ]] && killall $KILL
+	[[ $DISABLE_SCREEN_SAVER = 1 ]] && xset s $xset_time
 fi
 
 
