@@ -36,11 +36,11 @@ get_config(){
 
 	next_block=$(grep -m1 "\[" <<< "$config")
 	if [[ "$next_block" == [* ]]; then
-		next_block=$(echo "$next_block" | sed 's/\[/\\\[/' | sed 's/\]/\\\]/')
-		var="$(echo "$config" | awk "!p;/$next_block/{p=1}" |\
-			sed "s/$next_block.*//" | sed '/^$/d' | sed 's/^/export /')"
+		next_block=$(sed 's/\[/\\\[/; s/\]/\\\]/' <<< "$next_block")
+		var="$(echo "$config" | sed "/$next_block/q" | \
+			sed "s/$next_block.*//; /^$/d; s/^/export /")"
 	else
-		var="$(echo "$config" | sed 's/^/export /')"
+		var="$(sed '/^$/d; s/^/export /' <<< "$config")"
 	fi
 	eval "$var"
 }
@@ -95,6 +95,9 @@ uninstall_dxvk(){
 }
 
 sandbox(){
+	#a=("Desktop" "Personal" "My Pictures" "My music" "My Videos" \
+		#"Downloads" "Templates")
+	[[ -d $WINEPREFIX/drive_c/users/$USER ]] && user=$USER || user="steamuser"
 	readarray -t dirs <<< "$(ls $WINEPREFIX/drive_c/users/$USER)"
 	for i in "${dirs[@]}"; do
 		if [[ -L "$WINEPREFIX/drive_c/users/$USER/$i" ]]; then
@@ -216,7 +219,6 @@ fi
 get_config 'global'
 get_config $2
 
-
 [[ -z $WINEARCH ]] && export WINEARCH=win64
 
 case $1 in
@@ -232,8 +234,7 @@ case $1 in
 		DXVK=0
 		;;
 	"--winecfg") # open winecfg and exit
-		WINECFG="$(sed 's/wine64/wine/' <<< $WINE'cfg')"
-		[[ -f $WINECFG ]] && $WINECFG || echo 'winecfg not found' >&2
+		$WINE winecfg
 		exit
 		;;
 	"--create-prefix")
@@ -265,13 +266,20 @@ fi
 if [[ $launch = 1 ]]; then
 	[[ -z $DXVK_LOG_PATH ]] && export DXVK_LOG_PATH=$WINEPREFIX
 	[[ -z $WORKING_DIR ]] && WORKING_DIR="$(dirname "$LAUNCH")"
-	cd $WORKING_DIR
+	cd "$WORKING_DIR"
+
+	if [[ $DISABLE_SCREEN_SAVER = 1 ]]; then
+		xset_time=$(xset q | awk '/timeout/ {print $2}')
+		xset s off
+	fi
+
 	if [[ $GAMEMODE = 1 ]]; then
 		gamemoderun "$WINE" "$LAUNCH" "$ARGS"
 	else
 		"$WINE" "$LAUNCH" "$ARGS"
 	fi
-	#[[ $KILL != '' ]] && killall $KILL
+	[[ $KILL != '' ]] && killall $KILL
+	[[ $DISABLE_SCREEN_SAVER = 1 ]] && xset s $xset_time
 fi
 
 
