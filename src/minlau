@@ -28,7 +28,7 @@ help_message(){
 
 
 get_config(){
-	config="$(awk "/\[$1\]/ {p=1;next}p" $config_path | sed 's/;.*//g; s/#.*//g')"
+	config="$(awk "/\[$1\]/ {p=1;next}p" $config_path | sed 's/;.*//g')"
 	if [[ "$config" == '' ]]; then 
 		help_message "Game not found or config not set up properly" >&2
 		exit
