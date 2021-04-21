@@ -28,7 +28,7 @@ help_message(){
 
 
 get_config(){
-	config="$(awk "/\[$1\]/ {p=1;next}p" $config_path | sed 's/;.*//g')"
+	config="$(awk "/\[$1\]/ {p=1;next}p" $config_path | sed 's/;.*//g; s/#.*//g')"
 	if [[ "$config" == '' ]]; then 
 		help_message "Game not found or config not set up properly" >&2
 		exit
@@ -265,7 +265,7 @@ fi
 if [[ $launch = 1 ]]; then
 	[[ -z $DXVK_LOG_PATH ]] && export DXVK_LOG_PATH=$WINEPREFIX
 	[[ -z $WORKING_DIR ]] && WORKING_DIR="$(dirname "$LAUNCH")"
-	cd $WORKING_DIR
+	cd "$WORKING_DIR"
 
 	if [[ $DISABLE_SCREEN_SAVER = 1 ]]; then
 		xset_time=$(xset q | awk '/timeout/ {print $2}')
@@ -277,7 +277,7 @@ if [[ $launch = 1 ]]; then
 	else
 		"$WINE" "$LAUNCH" "$ARGS"
 	fi
-	#[[ $KILL != '' ]] && killall $KILL
+	[[ $KILL != '' ]] && killall $KILL
 	[[ $DISABLE_SCREEN_SAVER = 1 ]] && xset s $xset_time
 fi
 
