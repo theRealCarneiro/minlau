@@ -22,13 +22,14 @@ help_message(){
 	"\t--install-dxvk <GAME> \t\tInstall dxvk on prefix\n" \
 	"\t--uninstall-dxvk <GAME> \tUninstall dxvk on prefix\n" \
 	"\t--winecfg <GAME> \t\tOpen winecfg on prefix\n"\
+	"\t--winetricks <GAME> \t\tOpen winetricks on prefix\n"\
 	"\t--download_wine <VERSION> \tDownload and install wine\n" \
 	"\t--download_dxvk <VERSION> \tDownload and install dxvk\n" 
 }
 
 
 get_config(){
-	config="$(awk "/\[$1\]/ {p=1;next}p" $config_path | sed 's/;.*//g')"
+	config="$(awk "/\[$1\]/ {p=1;next}p" $config_path | sed 's/;.*//g; s/#.*//g')"
 	if [[ "$config" == '' ]]; then 
 		help_message "Game not found or config not set up properly" >&2
 		exit
@@ -237,6 +238,10 @@ case $1 in
 		$WINE winecfg
 		exit
 		;;
+	"--winetricks")
+		WINETRICKS=$(which winetricks) && $WINETRICKS
+		exit
+		;;
 	"--create-prefix")
 		;;
 	*)
@@ -253,6 +258,7 @@ if [[ $WINEPREFIX != '' && ! -d $WINEPREFIX ]]; then
 fi
 
 [[ $SANDBOX = 1 ]] && sandbox
+[[ $WINETRICKS_SANDBOX = 1 ]] && WINETRICKS=$(which winetricks) && $WINETRICKS sandbox
 
 # (un)install dxvk
 if [[ $AUTO_DXVK = 1 ]]; then
