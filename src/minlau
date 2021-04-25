@@ -67,31 +67,38 @@ restoreDll() {
 
 
 install_dxvk(){
-	if [[ -L "$system_dll_path/$1" ]]; then
-		if [[ $(readlink -f "$system_dll_path/$1" | sed 's/\/x.*//') = $DXVK_VER ]];then
-			echo "Updating $1 to $(sed 's/.*dxvk\///' <<< $DXVK_PATH)"
-			ln -sfn "$DXVK_PATH/$(sed 's/win/x/' <<< $WINEARCH)/$1" $system_dll_path
-			overrideDll $(sed 's/.dll//' <<< $1)
+	dll=$1
+	system_dll_path=$2
+	arch=$3
+	if [[ -L "$system_dll_path/$dll" ]]; then
+		if [[ $(readlink -f "$system_dll_path/$dll" | sed 's/\/x.*//') = $DXVK_VER ]];then
+			echo "Updating $dll $arch to $(sed 's/.*dxvk\///' <<< $DXVK_PATH)"
+			ln -sfn "$DXVK_PATH/$arch/$dll" $system_dll_path
+			overrideDll ${dll%%.*}
 		else
-			echo "$1 already up to date"
+			echo "$dll already up to date"
 		fi
 
 	else
-		echo "Installing $1 $(sed 's/.*dxvk\///' <<< $DXVK_PATH)"
-		[[ -f "$system_dll_path/$1" ]] && \
-		mv -f "$system_dll_path/$1" "$system_dll_path/$1.orig"
-		ln -sfn "$DXVK_PATH/$(sed 's/win/x/' <<< $WINEARCH)/$1" $system_dll_path
-		overrideDll $(sed 's/.dll//' <<< $1)
+		echo "Installing $dll $arch $(sed 's/.*dxvk\///' <<< $DXVK_PATH)"
+		[[ -f "$system_dll_path/$dll" ]] && \
+		mv -f "$system_dll_path/$dll" "$system_dll_path/$dll.orig"
+		ln -sfn "$DXVK_PATH/$arch/$dll" $system_dll_path
+		overrideDll ${dll%%.*}
 	fi
 }
 
 
 uninstall_dxvk(){
-	if [[ -L "$system_dll_path/$1" ]]; then
-		echo "Restoring $1"
-		restoreDll $(sed 's/.dll//' <<< $1)
-		rm "$system_dll_path/$1"
-		mv -f "$system_dll_path/$1.orig" "$system_dll_path/$1"
+	dll=$1
+	system_dll_path=$2
+	arch=$3
+	if [[ -L "$system_dll_path/$dll" ]]; then
+		echo "Restoring $dll $arch"
+		rm "$system_dll_path/$dll"
+		[[ -f "$system_dll_path/$dll.orig" ]] && \
+			mv -f "$system_dll_path/$dll.orig" "$system_dll_path/$dll"
+		[[ $arch = 'x64' ]] && restoreDll ${dll%%.*}
 	fi
 }
 
@@ -188,7 +195,6 @@ download_wine(){
 }
 
 
-
 if [[ $# = 0 || $1 = '--help' ]]; then
 	help_message "Available commands"
 	exit
@@ -242,6 +248,10 @@ case $1 in
 		WINETRICKS=$(which winetricks) && $WINETRICKS
 		exit
 		;;
+	"--regedit")
+		$WINE regedit
+		exit
+		;;
 	"--create-prefix")
 		;;
 	*)
@@ -254,7 +264,7 @@ esac
 if [[ $WINEPREFIX != '' && ! -d $WINEPREFIX ]]; then
 	echo "Prefix not found, creating a new one"
 	mkdir -p "$WINEPREFIX" 
-	$WINE wineboot
+	$WINE wineboot -u
 fi
 
 [[ $SANDBOX = 1 ]] && sandbox
@@ -263,9 +273,18 @@ fi
 # (un)install dxvk
 if [[ $AUTO_DXVK = 1 ]]; then
 	[[ $DXVK = 1 ]] && action="install_dxvk" || action="uninstall_dxvk" 
-	system_dll_path="$WINEPREFIX/drive_c/windows/system32"
-	for i in $(ls "$DXVK_PATH/$(sed 's/win/x/' <<< $WINEARCH)"); do
-		$action $i
+
+	[[ -z $DXVK_DLLS ]] && \
+		DXVK_DLLS=$(ls "$DXVK_PATH/$(sed 's/win/x/' <<< $WINEARCH)" | grep dll)
+
+	wine_path=$(dirname $WINE)
+	[[ -f $wine_path/wine ]] && \
+		win32_path=$($wine_path/wine winepath -u 'C:\windows\system32')
+	win64_path=$($wine_path/wine64 winepath -u 'C:\windows\system32')
+
+	for dll in $DXVK_DLLS; do
+		[[ -z $win32_path ]] || $action $dll "$win32_path" x32
+		$action $dll "$win64_path" x64
 	done
 fi
 

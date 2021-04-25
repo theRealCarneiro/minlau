@@ -16,7 +16,7 @@ _list_dxvk_builds(){
 _minlau(){
   local line
   _arguments -C \
-    ": :(--winecfg --install-dxvk --uninstall-dxvk --launch --list-games --winetricks --create-prefix --help --download-wine --download-dxvk)" \
+    ": :(--winecfg --install-dxvk --uninstall-dxvk --launch --regedit --list-games --winetricks --create-prefix --help --download-wine --download-dxvk)" \
     "*::arg:->args"
 
   case $line[1] in
@@ -36,6 +36,9 @@ _minlau(){
 	    _list_games
 	    ;;
     "--winetricks") 
+	    _list_games
+	    ;;
+    "--regedit") 
 	    _list_games
 	    ;;
     "--download-wine") 
