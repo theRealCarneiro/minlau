@@ -21,6 +21,10 @@ Display help message
 Create a prefix if there isn't already one
 
 .TP
+--delete-prefix <GAME>
+Delete prefix
+
+.TP
 --launch <GAME>
 Launch game        
 
@@ -36,6 +40,9 @@ Uninstall dxvk on prefix
 --winecfg <GAME>
 Open winecfg on prefix
 
+.TP
+--winetricks <GAME>
+Open winetricks on prefix
 
 .TP
 --download-wine <VERSION>
@@ -44,6 +51,10 @@ Download and install wine build in directory defined in config file
 .TP
 --download-dxvk <VERSION>
 Download and install dxvk build in directory defined in config file
+
+.TP
+--clear-cache 
+Delete everythong in the cache directory
 
 .TP
 --list Argument for [--download-wine] and [--download-dxvk]
@@ -60,41 +71,47 @@ The config file is located at "$XDG_CONFIG_HOME/minlau/config.ini" or "$HOME/.co
 .SS How to set up config.ini
 \The confifuration is done by puting the game name in [ ] and it's variables below. It will accept any varible you set, so things like "DXVK_HUD" can also be used.
 
-[global]		Global settings, will be overwriten by the game var
+[global]				Global settings, will be overwriten by the game var
 
-[GAME]		Game specific settings, overwrites global settings
+[GAME]				Game specific settings, overwrites global settings
 
-LAUNCH		Path to game executable
+LAUNCH				Path to game executable
 
-WINE			Path to wine binary
+WINE					Path to wine binary
 
-WINEPREFIX	Path to wine prefix
+WINEPREFIX			Path to wine prefix
 
-WINEARCH		Wine architecture [win32/win64], defaults to win64
+WINEARCH				Wine architecture [win32/win64], defaults to win64
 
-WINEESYNC		Whether or not to use esync [0/1]
+WINEESYNC				Whether or not to use esync [0/1]
 
-WINEFSYNC		Whether or not to use fsync [0/1]
+WINEFSYNC				Whether or not to use fsync [0/1]
 
-GAMEMODE		Whether or not to use feral gamemode [0/1]
+GAMEMODE				Whether or not to use feral gamemode [0/1]
 
-DXVK_PATH		Path to dxvk dll to install in prefix
+WINE_INSTALL			Where to install wine builds
 
-AUTO_DXVK		Whether or not to auto (un)install dxvk on prefix [0/1]
+DXVK_INSTALL			Where to install dxvk builds
 
-DXVK			When AUTO_DXVK=1 it will install or uninstall dxvk [0/1]
+DXVK_PATH				Path to dxvk installation 
 
-ARGS			Arguments to put after the command
+DXVK_DLLS				Which dxvk dlls to install (optional) 
 
-SANDBOX		Disables wine desktop integration [0/1]	
+AUTO_DXVK				Whether or not to auto (un)install dxvk on prefix [0/1]
 
-WINE_INSTALL	Path to install wine builds
+DXVK					When AUTO_DXVK=1 it will install or uninstall dxvk [0/1]
 
-DXVK_INSTALL	Path to install dxvk builds
+ARGS					Arguments to put after the command
 
-MINLAU_CACHE	Where to store temporary files
+SANDBOX				Disables wine desktop integration [0/1]	
 
-WORKING_DIR	Where to cd to when launching game
+WINETRICKS_SANDBOX		Disables wine desktop integration [0/1]	
+
+MINLAU_CACHE			Where to store dowloaded files
+
+WORKING_DIR			Where to cd to when launching game
+
+DISABLE_SCREEN_SAVER	Disable X screen saver
 
 .SH AUTHOR
 Gabriel Carneiro (gabriel.chaves.carneiro@gmail.com)
