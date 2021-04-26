@@ -110,4 +110,9 @@ Clone the repo and modify the contents of setup.sh to fit your needs, then just 
 git clone https://github.com/theRealCarneiro/minlau.git
 cd minlau
 chmod +x setup.sh
-sudo ./setup.sh [install/uninstall]
+sudo ./setup.sh install
+```
+#### Uninstall
+```sh
+sudo ./setup.sh uninstall
+```
