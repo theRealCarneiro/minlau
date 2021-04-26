@@ -39,9 +39,9 @@ get_config(){
 	if [[ "$next_block" == [* ]]; then
 		next_block=$(sed 's/\[/\\\[/; s/\]/\\\]/' <<< "$next_block")
 		var="$(echo "$config" | sed "/$next_block/q" | \
-			sed "s/$next_block.*//; /^$/d; s/^/export /")"
+			sed "s/$next_block.*//; /^$/d; s/ =/=/g; s/= /=/g; s/^/export /")"
 	else
-		var="$(sed '/^$/d; s/^/export /' <<< "$config")"
+		var="$(sed '/^$/d; s/ =/=/g; s/= /=/g; s/^/export /' <<< "$config")"
 	fi
 	eval "$var"
 }
