@@ -16,41 +16,46 @@ _list_dxvk_builds(){
 _minlau(){
   local line
   _arguments -C \
-    ": :(--winecfg --install-dxvk --uninstall-dxvk --launch --regedit --list-games --winetricks --create-prefix --help --download-wine --download-dxvk)" \
+    ": :(--launch --install-dxvk --uninstall-dxvk --winecfg --regedit --winetricks --create-prefix --delete-prefix --download-wine --download-dxvk --clear-cache --list-games --help)" \
     "*::arg:->args"
 
   case $line[1] in
-    "--winecfg") 
-	    _list_games
-	    ;;
-    "--install-dxvk") 
-	    _list_games
-	    ;;
-    "--uninstall-dxvk") 
-	    _list_games
-	    ;;
     "--launch") 
-	    _list_games
-	    ;;
-    "--create-prefix") 
-	    _list_games
-	    ;;
-    "--winetricks") 
-	    _list_games
-	    ;;
+      _list_games
+      ;;
+    "--install-dxvk") 
+      _list_games
+      ;;
+    "--uninstall-dxvk") 
+      _list_games
+      ;;
+    "--winecfg") 
+      _list_games
+      ;;
     "--regedit") 
-	    _list_games
-	    ;;
+      _list_games
+      ;;
+    "--winetricks") 
+      _list_games
+      ;;
+    "--create-prefix") 
+      _list_games
+      ;;
+    "--delete-prefix") 
+      _list_games
+      ;;
     "--download-wine") 
-	    _list_wine_builds
-	    ;;
+      _list_wine_builds
+      ;;
     "--download-dxvk") 
-	    _list_dxvk_builds
-	    ;;
+      _list_dxvk_builds
+      ;;
+    "--clear-cache")
+      ;;
     "--list-games")
-	    ;;
+      ;;
     "--help")
-	    ;;
+      ;;
   esac
 }
 

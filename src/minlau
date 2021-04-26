@@ -71,16 +71,17 @@ install_dxvk(){
 	system_dll_path=$2
 	arch=$3
 	if [[ -L "$system_dll_path/$dll" ]]; then
-		if [[ $(readlink -f "$system_dll_path/$dll" | sed 's/\/x.*//') = $DXVK_VER ]];then
-			echo "Updating $dll $arch to $(sed 's/.*dxvk\///' <<< $DXVK_PATH)"
+		dll_orig_path=$(readlink -f "$system_dll_path/$dll" | sed 's/\/x.*//')
+		if [[ $dll_orig_path != $DXVK_PATH ]];then
+			echo "Updating $dll $arch to ${DXVK_PATH##*/}"
 			ln -sfn "$DXVK_PATH/$arch/$dll" $system_dll_path
 			overrideDll ${dll%%.*}
 		else
-			echo "$dll already up to date"
+			echo "$dll $arch already up to date"
 		fi
 
 	else
-		echo "Installing $dll $arch $(sed 's/.*dxvk\///' <<< $DXVK_PATH)"
+		echo "Installing $dll $arch ${DXVK_PATH##*/}"
 		[[ -f "$system_dll_path/$dll" ]] && \
 		mv -f "$system_dll_path/$dll" "$system_dll_path/$dll.orig"
 		ln -sfn "$DXVK_PATH/$arch/$dll" $system_dll_path
@@ -107,24 +108,25 @@ sandbox(){
 		#"Downloads" "Templates")
 	[[ -d $WINEPREFIX/drive_c/users/$USER ]] && user=$USER || user="steamuser"
 	readarray -t dirs <<< "$(ls $WINEPREFIX/drive_c/users/$USER)"
-	for i in "${dirs[@]}"; do
-		if [[ -L "$WINEPREFIX/drive_c/users/$USER/$i" ]]; then
-			unlink "$WINEPREFIX/drive_c/users/$USER/$i"
-			mkdir "$WINEPREFIX/drive_c/users/$USER/$i"
+	for dir in "${dirs[@]}"; do
+		if [[ -L "$WINEPREFIX/drive_c/users/$USER/$dir" ]]; then
+			unlink "$WINEPREFIX/drive_c/users/$USER/$dir"
+			mkdir "$WINEPREFIX/drive_c/users/$USER/$dir"
 		fi
 	done
 }
 
 
 download_dxvk(){
-	url="https://api.github.com/repos/lutris/dxvk/releases"
-	jason=$(curl --silent "$url")
+	url_lutris="https://api.github.com/repos/lutris/dxvk/releases"
+	url_doitsujin="https://api.github.com/repos/doitsujin/dxvk/releases"
+	jason="$(curl --silent "$url_lutris") $(curl --silent "$url_doitsujin")"
 	ver=$(echo "$jason" | grep "tag_name" | sed 's/.* //g; s/"//g; s/,//g')
 	echo $ver | sed 's/ /\n/g' > $MINLAU_CACHE/dxvk.ver
 	[[ "$1" = "--update-database" ]] && return
 
-	for i in $(cat $MINLAU_CACHE/dxvk.ver);do
-		[[ "$1" = "$i" ]] && exist=1 && break
+	for dxvk_ver in $(cat $MINLAU_CACHE/dxvk.ver);do
+		[[ "$1" = "$dxvk_ver" ]] && exist=1 && break
 	done
 	[[ -z $exist ]] && echo "Build not found" >&2 && exit
 
@@ -136,10 +138,8 @@ download_dxvk(){
 	[[ -z $DXVK_INSTALL ]] && DXVK_INSTALL=$XDG_DATA_HOME/minlau/dxvk
 	mkdir -p $DXVK_INSTALL
 
-	[[ -f $MINLAU_CACHE/${link##*/} ]] && rm $MINLAU_CACHE/${link##*/}
-	wget -P $MINLAU_CACHE $link
+	wget --continue -P  $MINLAU_CACHE $link
 	tar -xf $MINLAU_CACHE/${link##*/} -C $DXVK_INSTALL
-	rm $MINLAU_CACHE/${link##*/}
 }
 
 
@@ -188,10 +188,8 @@ download_wine(){
 	[[ -z $WINE_INSTALL ]] && WINE_INSTALL=$XDG_DATA_HOME/minlau/wine
 	mkdir -p $WINE_INSTALL
 
-	[[ -f $MINLAU_CACHE/${link##*/} ]] && rm $MINLAU_CACHE/${link##*/}
-	wget -P $MINLAU_CACHE $link
+	wget --continue -P $MINLAU_CACHE $link
 	tar -xf $MINLAU_CACHE/${link##*/} -C $WINE_INSTALL
-	rm $MINLAU_CACHE/${link##*/}
 }
 
 
@@ -202,6 +200,14 @@ fi
 
 if [[ "$1" == '--list-games' ]]; then
 	echo $(grep '\[' $config_path | sed 's/\[//g; s/\]//g' | tail -n +2)
+	exit
+fi
+
+get_config 'global'
+
+if [[ $1 = '--clear-cache' ]]; then 
+	read -p "Are you sure you want to delete all the cached files? [y/n] " answer
+	[[ $answer = 'y' ]] && rm -r $MINLAU_CACHE && echo "Done"
 	exit
 fi
 
@@ -223,7 +229,6 @@ if [[ -z $2 ]]; then
 	exit
 fi
 
-get_config 'global'
 get_config $2
 
 [[ -z $WINEARCH ]] && export WINEARCH=win64
@@ -254,6 +259,11 @@ case $1 in
 		;;
 	"--create-prefix")
 		;;
+	"--delete-prefix")
+		read -p "Are you sure you want to delete $2 prefix? [y/n] " answer
+		[[ $answer = 'y' ]] && rm -r $WINEPREFIX && echo "Done"
+		exit
+		;;
 	*)
 		help_message "Not a valid command, here are the right ones:" >&2
 		exit
@@ -261,7 +271,7 @@ case $1 in
 esac
 
 # create prefix when there's none
-if [[ $WINEPREFIX != '' && ! -d $WINEPREFIX ]]; then
+if [[ $WINEPREFIX != '' && ! -f $WINEPREFIX/system.reg ]]; then
 	echo "Prefix not found, creating a new one"
 	mkdir -p "$WINEPREFIX" 
 	$WINE wineboot -u
