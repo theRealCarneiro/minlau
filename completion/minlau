@@ -1,0 +1,65 @@
+#/usr/bin/env bash
+
+_list_games(){
+	COMPREPLY=($(compgen -W "$(minlau --list-games)" "${COMP_WORDS[2]}"))
+}
+
+_list_wine_builds(){
+	COMPREPLY=($(compgen -W "--list --update-database $(minlau --download-wine --list)" -- "${COMP_WORDS[2]}"))
+}
+
+_list_dxvk_builds(){
+	COMPREPLY=($(compgen -W "--list --update-database $(minlau --download-dxvk --list)" -- "${COMP_WORDS[2]}"))
+}
+
+_minlau(){
+	if [ "${#COMP_WORDS[@]}" -gt 3 ]; then
+		return
+	fi
+
+	if [ "${#COMP_WORDS[@]}" = 2 ]; then
+		COMPREPLY=($(compgen -W "--launch --install-dxvk --uninstall-dxvk --winecfg --regedit --winetricks --create-prefix --delete-prefix --download-wine --download-dxvk --clear-cache --list-games --help" -- "${COMP_WORDS[1]}"))
+	fi
+
+	case ${COMP_WORDS[1]} in
+		"--launch") 
+			_list_games
+			;;
+	    "--install-dxvk") 
+			_list_games
+			;;
+	    "--uninstall-dxvk") 
+			 _list_games
+			 ;;
+	    "--winecfg") 
+			 _list_games
+			 ;;
+	    "--regedit") 
+			 _list_games
+			 ;;
+	    "--winetricks") 
+			 _list_games
+			 ;;
+	    "--create-prefix") 
+			 _list_games
+			 ;;
+	    "--delete-prefix") 
+			 _list_games
+			 ;;
+	    "--download-wine") 
+			 _list_wine_builds
+			 ;;
+	    "--download-dxvk") 
+			 _list_dxvk_builds
+			 ;;
+	    "--clear-cache")
+			 ;;
+	    "--list-games")
+			 ;;
+	    "--help")
+			 ;;
+	esac
+}
+
+complete -F _minlau minlau
+
