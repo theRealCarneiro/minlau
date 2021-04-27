@@ -25,11 +25,11 @@ if [ "$1" = "install" ]; then
 	echo "install -Dm644 LICENSE "$LICENSE_DIR/LICENSE""
 	install -Dm644 LICENSE "$LICENSE_DIR/LICENSE"
 
-	echo "install -Dm644 completion/_minlau "$ZSH_COMPLETION_DIR/_minlau""
-	install -Dm644 completion/_minlau "$ZSH_COMPLETION_DIR/_minlau"
+	echo "install -Dm644 completion/zsh/_minlau "$ZSH_COMPLETION_DIR/_minlau""
+	install -Dm644 completion/zsh/_minlau "$ZSH_COMPLETION_DIR/_minlau"
 
-	echo "install -Dm644 completion/minlau "$BASH_COMPLETION_DIR/minlau""
-	install -Dm644 completion/minlau "$BASH_COMPLETION_DIR/minlau"
+	echo "install -Dm644 completion/bash/minlau "$BASH_COMPLETION_DIR/minlau""
+	install -Dm644 completion/bash/minlau "$BASH_COMPLETION_DIR/minlau"
 
 	echo "install -Dm644 minlau.1 "$MAN_DIR/minlau.1""
 	install -Dm644 minlau.1 "$MAN_DIR/minlau.1"
