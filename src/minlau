@@ -14,36 +14,40 @@ fi
 
 
 help_message(){
-	echo -en "$1\n" \
-	"\t--help \t\t\t\tDisplay this message\n" \
-	"\t--list-games \t\t\tList games in config.ini\n" \
-	"\t--create-prefix <GAME> \t\tCreate a prefix if there isn't already one\n" \
-	"\t--launch <GAME> \t\tLaunch game\n" \
-	"\t--install-dxvk <GAME> \t\tInstall dxvk on prefix\n" \
-	"\t--uninstall-dxvk <GAME> \tUninstall dxvk on prefix\n" \
-	"\t--winecfg <GAME> \t\tOpen winecfg on prefix\n"\
-	"\t--winetricks <GAME> \t\tOpen winetricks on prefix\n"\
-	"\t--download_wine <VERSION> \tDownload and install wine\n" \
-	"\t--download_dxvk <VERSION> \tDownload and install dxvk\n" 
+	echo -en "$1\n"													\
+	"\t--help \t\t\t\tDisplay this message\n"								\
+	"\t--list-games \t\t\tList games in config.ini\n"							\
+	"\t--create-prefix <GAME> \t\tCreate a prefix if there isn't already one\n"	\
+	"\t--delete-prefix <GAME> \t\tDelete prefix\n"							\
+	"\t--launch <GAME> \t\tLaunch game\n"									\
+	"\t--install-dxvk <GAME> \t\tInstall dxvk on prefix\n"						\
+	"\t--uninstall-dxvk <GAME> \tUninstall dxvk on prefix\n"					\
+	"\t--winecfg <GAME> \t\tOpen winecfg on prefix\n"							\
+	"\t--regedit <GAME> \t\tOpen regedit on prefix\n"							\
+	"\t--winetricks <GAME> \t\tOpen winetricks on prefix\n"					\
+	"\t--download-wine <VERSION> \tDownload and install wine\n"					\
+	"\t--download-dxvk <VERSION> \tDownload and install dxvk\n"					\
+	"\t--clear-cache \t\t\tDelete everything in the cache directory\n" 
 }
 
 
 get_config(){
+	local config next_block
 	config="$(awk "/\[$1\]/ {p=1;next}p" $config_path | sed 's/;.*//g; s/#.*//g')"
 	if [[ "$config" == '' ]]; then 
 		help_message "Game not found or config not set up properly" >&2
 		exit
 	fi
 
-	next_block=$(grep -m1 "\[" <<< "$config")
+	local next_block=$(grep -m1 "\[" <<< "$config")
 	if [[ "$next_block" == [* ]]; then
 		next_block=$(sed 's/\[/\\\[/; s/\]/\\\]/' <<< "$next_block")
-		var="$(echo "$config" | sed "/$next_block/q" | \
+		config="$(echo "$config" | sed "/$next_block/q" | \
 			sed "s/$next_block.*//; /^$/d; s/ =/=/g; s/= /=/g; s/^/export /")"
 	else
-		var="$(sed '/^$/d; s/ =/=/g; s/= /=/g; s/^/export /' <<< "$config")"
+		config="$(sed '/^$/d; s/ =/=/g; s/= /=/g; s/^/export /' <<< "$config")"
 	fi
-	eval "$var"
+	eval "$config"
 }
 
 
@@ -67,11 +71,12 @@ restoreDll() {
 
 
 install_dxvk(){
-	dll=$1
-	system_dll_path=$2
-	arch=$3
+	local dll system_dll_path arch
+	local dll=$1
+	local system_dll_path=$2
+	local arch=$3
 	if [[ -L "$system_dll_path/$dll" ]]; then
-		dll_orig_path=$(readlink -f "$system_dll_path/$dll" | sed 's/\/x.*//')
+		local dll_orig_path=$(readlink -f "$system_dll_path/$dll" | sed 's/\/x.*//')
 		if [[ $dll_orig_path != $DXVK_PATH ]];then
 			echo "Updating $dll $arch to ${DXVK_PATH##*/}"
 			ln -sfn "$DXVK_PATH/$arch/$dll" $system_dll_path
@@ -91,9 +96,9 @@ install_dxvk(){
 
 
 uninstall_dxvk(){
-	dll=$1
-	system_dll_path=$2
-	arch=$3
+	local dll=$1
+	local system_dll_path=$2
+	local arch=$3
 	if [[ -L "$system_dll_path/$dll" ]]; then
 		echo "Restoring $dll $arch"
 		rm "$system_dll_path/$dll"
@@ -118,11 +123,11 @@ sandbox(){
 
 
 download_dxvk(){
-	url_lutris="https://api.github.com/repos/lutris/dxvk/releases"
-	url_doitsujin="https://api.github.com/repos/doitsujin/dxvk/releases"
-	jason="$(curl --silent "$url_lutris") $(curl --silent "$url_doitsujin")"
-	ver=$(echo "$jason" | grep "tag_name" | sed 's/.* //g; s/"//g; s/,//g')
-	echo $ver | sed 's/ /\n/g' > $MINLAU_CACHE/dxvk.ver
+	local url_lutris="https://api.github.com/repos/lutris/dxvk/releases"
+	local url_doitsujin="https://api.github.com/repos/doitsujin/dxvk/releases"
+	local jason="$(curl --silent "$url_lutris") $(curl --silent "$url_doitsujin")"
+	local versions=$(echo "$jason" | grep "tag_name" | sed 's/.* //g; s/"//g; s/,//g')
+	echo $versions | sed 's/ /\n/g' > $MINLAU_CACHE/dxvk.ver
 	[[ "$1" = "--update-database" ]] && return
 
 	for dxvk_ver in $(cat $MINLAU_CACHE/dxvk.ver);do
@@ -130,9 +135,11 @@ download_dxvk(){
 	done
 	[[ -z $exist ]] && echo "Build not found" >&2 && exit
 
-	ver="$(sed 's/v//' <<< "$1")"
+	local selected_version="$(sed 's/v//' <<< "$1")"
 
-	link=$(echo "$jason"|grep "download_ur.*$ver\.t"|sed 's/.* //g; s/"//g; s/,//g')
+	local link=$(echo "$jason"|grep "download_ur.*$selected_version\.t"\
+		|sed 's/.* //g; s/"//g; s/,//g')
+
 	[[ "$link" == '' ]] && echo "Build not found" >&2 && exit
 
 	[[ -z $DXVK_INSTALL ]] && DXVK_INSTALL=$XDG_DATA_HOME/minlau/dxvk
@@ -144,21 +151,21 @@ download_dxvk(){
 
 
 download_wine(){
-	lutris_url="https://lutris.net/api/runners?format=json&search=wine"
-	tkg_url="https://api.github.com/repos/Frogging-Family/wine-tkg-git/releases"
-	lutris_wine="$(curl --silent "$lutris_url")"
-	tkg_wine="$(curl --silent "$tkg_url")"
+	local lutris_url="https://lutris.net/api/runners?format=json&search=wine"
+	local tkg_url="https://api.github.com/repos/Frogging-Family/wine-tkg-git/releases"
+	local lutris_wine="$(curl --silent "$lutris_url")"
+	local tkg_wine="$(curl --silent "$tkg_url")"
 
 	# get lutris wine build name
-	lutris_ver=$(echo "$lutris_wine" | sed 's/{/\n/g' | \
+	local lutris_versions=$(echo "$lutris_wine" | sed 's/{/\n/g' | \
 		sed 's/,.*/ /g; s/.*://g; s/"//g'|	tail -n +4)
 
 	# get wine-tkg build name
-	tgk_ver=$(echo "$tkg_wine" | grep "name.*wine.*pkg" | \
+	local tgk_versions=$(echo "$tkg_wine" | grep "name.*wine.*pkg" | \
 		sed 's/.*wine-//; s/"//g; s/\.r.*//;')
 
-	echo "$lutris_ver" | tac > $MINLAU_CACHE/wine.ver
-	echo "$tgk_ver" >> $MINLAU_CACHE/wine.ver
+	echo "$lutris_versions" | tac > $MINLAU_CACHE/wine.ver
+	echo "$tgk_versions" >> $MINLAU_CACHE/wine.ver
 
 	[[ "$1" = "--update-database" ]] && return
 
@@ -168,14 +175,15 @@ download_wine(){
 	done
 	[[ -z $exist ]] && echo "Build not found" >&2 && exit
 
-	ver=$1
+	local selected_version=$1
+	local link_tkg link_lutris link
 
-	link_tkg=$(echo "$tkg_wine" | grep "download_url.*$ver\." |\
+	link_tkg=$(echo "$tkg_wine" | grep "download_url.*$selected_version\." |\
 		sed 's/.* //; s/"//g')
 
 	[[ -z $link_tkg ]] && \
 	link_lutris=$(echo "$lutris_wine" | sed 's/{/\n/g' |\
-		grep $ver | sed 's/.*url":"//g; s/".*//g')
+		grep $selected_version | sed 's/.*url":"//g; s/".*//g')
 
 	if [[ "$link_tkg" != "" ]]; then
 		link=$link_tkg 
