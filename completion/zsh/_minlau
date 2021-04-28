@@ -1,5 +1,79 @@
 #compdef minlau
 
+_minlau(){
+  local -a args
+  if (( CURRENT < 3 )); then
+    args+=(
+      '--launch[Launch a game]'
+      '--install-dxvk[Install dxvk on prefix]'
+      '--uninstall-dxvk[Uninstall dxvk on prefix]'
+      '--winecfg[Open winecfg on prefix]'
+      '--regedit[Open regedit on prefix]'
+      '--winetricks[Open winetricks on prefix]'
+      '--create-prefix[Create a prefix if there is none]'
+      '--delete-prefix[Delete prefix]'
+      '--download-wine[Download and install win]'
+      '--download-dxvk[Download and install dxvk]'
+      '--clear-cache[Delete everythong in the cache directory]'
+      '--list-games[List games in config.ini]'
+      '--help[Display help message]'
+    )
+    _arguments $args[@] 
+    return
+  fi
+
+  (( CURRENT > 3 )) || case $words[2] in
+    "--launch") 
+      _list_games
+	 return
+      ;;
+    "--install-dxvk") 
+      _list_games
+	 return
+      ;;
+    "--uninstall-dxvk") 
+      _list_games
+	 return
+      ;;
+    "--winecfg") 
+      _list_games
+	 return
+      ;;
+    "--regedit") 
+      _list_games
+	 return
+      ;;
+    "--winetricks") 
+      _list_games
+	 return
+      ;;
+    "--create-prefix") 
+      _list_games
+	 return
+      ;;
+    "--delete-prefix") 
+      _list_games
+	 return
+      ;;
+    "--download-wine") 
+      _list_wine_builds
+	 return
+      ;;
+    "--download-dxvk") 
+      _list_dxvk_builds
+	 return
+      ;;
+    "--clear-cache")
+	 return
+      ;;
+    "--list-games")
+	 return
+      ;;
+    "--help")
+	 return
+      ;;
+  esac
+}
 
 _list_games(){
   _alternative "($(minlau --list-games))"
@@ -11,52 +85,6 @@ _list_wine_builds(){
 
 _list_dxvk_builds(){
   _alternative "(--list --update-database $(minlau --download-dxvk --list))"
-}
-
-_minlau(){
-  local line
-  _arguments -C \
-    ": :(--launch --install-dxvk --uninstall-dxvk --winecfg --regedit --winetricks --create-prefix --delete-prefix --download-wine --download-dxvk --clear-cache --list-games --help)" \
-    "*::arg:->args"
-
-  case $line[1] in
-    "--launch") 
-      _list_games
-      ;;
-    "--install-dxvk") 
-      _list_games
-      ;;
-    "--uninstall-dxvk") 
-      _list_games
-      ;;
-    "--winecfg") 
-      _list_games
-      ;;
-    "--regedit") 
-      _list_games
-      ;;
-    "--winetricks") 
-      _list_games
-      ;;
-    "--create-prefix") 
-      _list_games
-      ;;
-    "--delete-prefix") 
-      _list_games
-      ;;
-    "--download-wine") 
-      _list_wine_builds
-      ;;
-    "--download-dxvk") 
-      _list_dxvk_builds
-      ;;
-    "--clear-cache")
-      ;;
-    "--list-games")
-      ;;
-    "--help")
-      ;;
-  esac
 }
 
 _minlau
