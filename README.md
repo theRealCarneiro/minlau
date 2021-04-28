@@ -3,7 +3,7 @@ Minimalist wine game launcher written purely in bash.
 
 
 ## Features
- - Fully featured zsh completion script
+ - Fully featured zsh and bash completion script
  - Create and delete wine prefixes
  - Download and install wine builds
  - Download and install dxvk builds
@@ -28,7 +28,7 @@ Minimalist wine game launcher written purely in bash.
 | --winetricks   [game]     | Open winetricks on prefix                         |
 | --download-wine [version] | Download wine build and install it                |
 | --download-dxvk [version] | Download dxvk build and install it                |
-| --clear-cache             | Delete everythong in the cache directory          |
+| --clear-cache             | Delete everything in the cache directory          |
 
 
 ## Config file
