@@ -48,10 +48,10 @@ _minlau(){
 			 _list_games
 			 ;;
 	    "--download-wine") 
-			 _list_wine_builds
+			 _list_builds wine
 			 ;;
 	    "--download-dxvk") 
-			 _list_dxvk_builds
+			 _list_builds dxvk
 			 ;;
 	    "--clear-cache")
 			 ;;
@@ -68,15 +68,12 @@ _list_games(){
 	)
 }
 
-_list_wine_builds(){
+_list_builds(){
 	COMPREPLY=(
-		$(compgen -W "--list --update-database $(minlau --download-wine --list)" -- "${COMP_WORDS[2]}")
-	)
-}
-
-_list_dxvk_builds(){
-	COMPREPLY=(
-		$(compgen -W "--list --update-database $(minlau --download-dxvk --list)" -- "${COMP_WORDS[2]}")
+		$(compgen -W \
+			"--list --update-database $(minlau --download-$1 --list)" \
+			-- "${COMP_WORDS[2]}"
+		)
 	)
 }
 

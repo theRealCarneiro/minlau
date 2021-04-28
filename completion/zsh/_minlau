@@ -14,7 +14,7 @@ _minlau(){
       '--delete-prefix[Delete prefix]'
       '--download-wine[Download and install win]'
       '--download-dxvk[Download and install dxvk]'
-      '--clear-cache[Delete everythong in the cache directory]'
+      '--clear-cache[Delete everything in the cache directory]'
       '--list-games[List games in config.ini]'
       '--help[Display help message]'
     )
@@ -56,11 +56,11 @@ _minlau(){
 	 return
       ;;
     "--download-wine") 
-      _list_wine_builds
+      _list_builds wine
 	 return
       ;;
     "--download-dxvk") 
-      _list_dxvk_builds
+      _list_builds dxvk
 	 return
       ;;
     "--clear-cache")
@@ -79,12 +79,11 @@ _list_games(){
   _alternative "($(minlau --list-games))"
 }
 
-_list_wine_builds(){
-  _alternative "(--list --update-database $(minlau --download-wine --list))"
-}
-
-_list_dxvk_builds(){
-  _alternative "(--list --update-database $(minlau --download-dxvk --list))"
+_list_builds(){
+  _arguments \
+    "--list[List all $1 builds availeble]" \
+    "--update-database[Update version database]"	
+  _alternative "($(minlau --download-$1 --list))"
 }
 
 _minlau
