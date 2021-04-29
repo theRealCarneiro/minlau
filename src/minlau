@@ -38,14 +38,15 @@ get_config(){
 		help_message "Game not found or config not set up properly" >&2
 		exit
 	fi
-
+	
+	# grab the name of the next [game], than cut everything below it
 	local next_block=$(grep -m1 "\[" <<< "$config")
 	if [[ "$next_block" == [* ]]; then
 		next_block=$(sed 's/\[/\\\[/; s/\]/\\\]/' <<< "$next_block")
-		config="$(echo "$config" | sed "/$next_block/q" | \
+		config="$(sed "/$next_block/q" <<< "$config" | \
 			sed "s/$next_block.*//; /^$/d; s/ =/=/g; s/= /=/g; s/^/export /")"
 	else
-		config="$(sed '/^$/d; s/ =/=/g; s/= /=/g; s/^/export /' <<< "$config")"
+		config="$(sed '/^$/d; s/ =/=/g; s/= /=/g;  s/^/export /' <<< "$config")"
 	fi
 	eval "$config"
 }
@@ -71,7 +72,6 @@ restoreDll() {
 
 
 install_dxvk(){
-	local dll system_dll_path arch
 	local dll=$1
 	local system_dll_path=$2
 	local arch=$3
@@ -127,9 +127,12 @@ download_dxvk(){
 	local url_doitsujin="https://api.github.com/repos/doitsujin/dxvk/releases"
 	local jason="$(curl --silent "$url_lutris") $(curl --silent "$url_doitsujin")"
 	local versions=$(echo "$jason" | grep "tag_name" | sed 's/.* //g; s/"//g; s/,//g')
+
+	# save version names to a file
 	echo $versions | sed 's/ /\n/g' > $MINLAU_CACHE/dxvk.ver
 	[[ "$1" = "--update-database" ]] && return
 
+	# check if version exists
 	for dxvk_ver in $(cat $MINLAU_CACHE/dxvk.ver);do
 		[[ "$1" = "$dxvk_ver" ]] && exist=1 && break
 	done
@@ -137,6 +140,7 @@ download_dxvk(){
 
 	local selected_version="$(sed 's/v//' <<< "$1")"
 
+	# grab the download link of the selected version
 	local link=$(echo "$jason"|grep "download_ur.*$selected_version\.t"\
 		|sed 's/.* //g; s/"//g; s/,//g')
 
@@ -163,7 +167,8 @@ download_wine(){
 	# get wine-tkg build name
 	local tgk_versions=$(echo "$tkg_wine" | grep "name.*wine.*pkg" | \
 		sed 's/.*wine-//; s/"//g; s/\.r.*//;')
-
+	
+	# save build names into a file
 	echo "$lutris_versions" | tac > $MINLAU_CACHE/wine.ver
 	echo "$tgk_versions" >> $MINLAU_CACHE/wine.ver
 
@@ -175,16 +180,17 @@ download_wine(){
 	done
 	[[ -z $exist ]] && echo "Build not found" >&2 && exit
 
-	local selected_version=$1
-	local link_tkg link_lutris link
+	local link_tkg link_lutris link selected_version
+	selected_version=$1
 
+	# grab download link for selected version
 	link_tkg=$(echo "$tkg_wine" | grep "download_url.*$selected_version\." |\
 		sed 's/.* //; s/"//g')
-
 	[[ -z $link_tkg ]] && \
 	link_lutris=$(echo "$lutris_wine" | sed 's/{/\n/g' |\
 		grep $selected_version | sed 's/.*url":"//g; s/".*//g')
 
+	# check if there is a link
 	if [[ "$link_tkg" != "" ]]; then
 		link=$link_tkg 
 	elif [[ "$link_lutris" != "" ]]; then
