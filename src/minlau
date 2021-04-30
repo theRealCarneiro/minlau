@@ -40,7 +40,7 @@ get_config(){
 	fi
 	
 	# grab the name of the next [game], than cut everything below it
-	local next_block=$(grep -m1 "\[" <<< "$config")
+	next_block=$(grep -m1 "\[" <<< "$config")
 	if [[ "$next_block" == [* ]]; then
 		next_block=$(sed 's/\[/\\\[/; s/\]/\\\]/' <<< "$next_block")
 		config="$(sed "/$next_block/q" <<< "$config" | \
@@ -149,7 +149,7 @@ download_dxvk(){
 	[[ -z $DXVK_INSTALL ]] && DXVK_INSTALL=$XDG_DATA_HOME/minlau/dxvk
 	mkdir -p $DXVK_INSTALL
 
-	wget --continue -P  $MINLAU_CACHE $link
+	curl -C - -L $link --output $MINLAU_CACHE/${link##*/} || exit
 	tar -xf $MINLAU_CACHE/${link##*/} -C $DXVK_INSTALL
 }
 
@@ -202,7 +202,7 @@ download_wine(){
 	[[ -z $WINE_INSTALL ]] && WINE_INSTALL=$XDG_DATA_HOME/minlau/wine
 	mkdir -p $WINE_INSTALL
 
-	wget --continue -P $MINLAU_CACHE $link
+	curl -C - -L $link --output $MINLAU_CACHE/${link##*/} || exit
 	tar -xf $MINLAU_CACHE/${link##*/} -C $WINE_INSTALL
 }
 
