@@ -208,7 +208,7 @@ download_wine(){
 	if [[ "$link_tkg" != "" ]]; then
 		tar -xf $MINLAU_CACHE/${link##*/} -C $MINLAU_CACHE/tmp
 		mv $MINLAU_CACHE/tmp/usr \
-			"$WINE_INSTALL/tkg-$(sed 's/.*wine.*git//;s/\.r.*//' <<< ${link##*/})"
+			"$WINE_INSTALL/tkg$(sed 's/.*wine.*git//;s/\.r.*//' <<< ${link##*/})"
 		rm -r $MINLAU_CACHE/tmp
 	else
 		tar -xf $MINLAU_CACHE/${link##*/} -C $WINE_INSTALL
