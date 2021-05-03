@@ -193,6 +193,7 @@ download_wine(){
 	# check if there is a link
 	if [[ "$link_tkg" != "" ]]; then
 		link=$link_tkg 
+		mkdir -p $MINLAU_CACHE/tmp
 	elif [[ "$link_lutris" != "" ]]; then
 		link=$link_lutris
 	else
@@ -203,7 +204,15 @@ download_wine(){
 	mkdir -p $WINE_INSTALL
 
 	curl -C - -L $link --output $MINLAU_CACHE/${link##*/} || exit
-	tar -xf $MINLAU_CACHE/${link##*/} -C $WINE_INSTALL
+
+	if [[ "$link_tkg" != "" ]]; then
+		tar -xf $MINLAU_CACHE/${link##*/} -C $MINLAU_CACHE/tmp
+		mv $MINLAU_CACHE/tmp/usr \
+			"$WINE_INSTALL/tkg-$(sed 's/.*wine.*git//;s/\.r.*//' <<< ${link##*/})"
+		rm -r $MINLAU_CACHE/tmp
+	else
+		tar -xf $MINLAU_CACHE/${link##*/} -C $WINE_INSTALL
+	fi
 }
 
 
@@ -234,7 +243,6 @@ if [[ $1 = --download-* ]]; then
 		exit
 	fi
 	download_${1##*-} $2 
-	[[ "$2" = "--update-database" ]] && exit
 	exit
 fi
 
