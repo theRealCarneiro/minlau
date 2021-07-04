@@ -109,8 +109,6 @@ uninstall_dxvk(){
 }
 
 sandbox(){
-	#a=("Desktop" "Personal" "My Pictures" "My music" "My Videos" \
-		#"Downloads" "Templates")
 	[[ -d $WINEPREFIX/drive_c/users/$USER ]] && user=$USER || user="steamuser"
 	readarray -t dirs <<< "$(ls $WINEPREFIX/drive_c/users/$USER)"
 	for dir in "${dirs[@]}"; do
@@ -188,7 +186,7 @@ download_wine(){
 		sed 's/.* //; s/"//g')
 	[[ -z $link_tkg ]] && \
 	link_lutris=$(echo "$lutris_wine" | sed 's/{/\n/g' |\
-		grep $selected_version | sed 's/.*url":"//g; s/".*//g')
+		grep \"$selected_version\" | sed 's/.*url":"//g; s/".*//g')
 
 	# check if there is a link
 	if [[ "$link_tkg" != "" ]]; then
@@ -338,5 +336,3 @@ if [[ $launch = 1 ]]; then
 	[[ $KILL != '' ]] && killall $KILL
 	[[ $DISABLE_SCREEN_SAVER = 1 ]] && xset s $xset_time
 fi
-
-
